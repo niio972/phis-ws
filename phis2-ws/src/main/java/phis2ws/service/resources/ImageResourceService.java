@@ -78,14 +78,11 @@ import phis2ws.service.view.model.phis.ImageMetadata;
  */
 @Api("/images")
 @Path("/images")
-public class ImageResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(ImageResourceService.class);
+public class ImageResourceService extends AbstractResourceService{
     
     @Context
     UriInfo uri;
     
-    @SessionInject
-    Session userSession;
     
     // For the waiting annotations
     public final static ExecutorService THREAD_POOL = Executors.newCachedThreadPool();

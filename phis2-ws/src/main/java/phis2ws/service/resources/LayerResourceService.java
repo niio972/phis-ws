@@ -47,13 +47,7 @@ import phis2ws.service.view.brapi.form.ResponseFormPOST;
 
 @Api("/layers")
 @Path("layers")
-public class LayerResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(LayerResourceService.class);
-    
-    //Session de l'utilisateur
-    @SessionInject
-    Session userSession;
-    
+public class LayerResourceService extends AbstractResourceService{
     
     /**
      * 

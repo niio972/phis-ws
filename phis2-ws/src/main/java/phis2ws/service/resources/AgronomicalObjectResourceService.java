@@ -53,14 +53,9 @@ import phis2ws.service.view.model.phis.AgronomicalObject;
  */
 @Api("/agronomicalObjects")
 @Path("agronomicalObjects")
-public class AgronomicalObjectResourceService {
+public class AgronomicalObjectResourceService extends AbstractResourceService{
 
-    final static Logger LOGGER = LoggerFactory.getLogger(AgronomicalObjectResourceService.class);
-    
-    //Session de l'utilisateur
-    @SessionInject
-    Session userSession;
-  
+
     /**
      * Enregistre un ensemble d'objets agronomiques dans le triplestore et les associe à un essai s'il est renseigné
      * @param agronomicalObjectsDTO liste des objets agronomiques à enregistrer

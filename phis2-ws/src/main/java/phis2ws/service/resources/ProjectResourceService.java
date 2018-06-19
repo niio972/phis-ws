@@ -52,12 +52,7 @@ import phis2ws.service.view.model.phis.Project;
 
 @Api("/projects")
 @Path("projects")
-public class ProjectResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(ProjectResourceService.class);
-    
-    //Session de l'utilisateur
-    @SessionInject
-    Session userSession;
+public class ProjectResourceService extends AbstractResourceService{
     
     /**
      * 

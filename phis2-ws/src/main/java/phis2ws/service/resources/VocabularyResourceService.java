@@ -46,12 +46,7 @@ import phis2ws.service.view.model.phis.Property;
  */
 @Api("/vocabularies")
 @Path("/vocabularies")
-public class VocabularyResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(VocabularyResourceService.class);
-    
-    //user session
-    @SessionInject
-    Session userSession;
+public class VocabularyResourceService extends AbstractResourceService{
     
     /**
      * 

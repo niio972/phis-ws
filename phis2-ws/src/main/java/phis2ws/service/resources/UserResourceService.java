@@ -53,12 +53,7 @@ import phis2ws.service.view.brapi.form.ResponseFormUser;
 
 @Api("/user")
 @Path("users")
-public class UserResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(UserResourceService.class);
-    
-    //Session de l'utilisateur
-    @SessionInject
-    Session userSession;
+public class UserResourceService extends AbstractResourceService{
     
     /**
      * 

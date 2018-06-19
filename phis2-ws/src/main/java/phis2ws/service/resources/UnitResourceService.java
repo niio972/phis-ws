@@ -52,12 +52,7 @@ import phis2ws.service.view.model.phis.Unit;
 
 @Api("/units")
 @Path("units")
-public class UnitResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(UnitResourceService.class);
-    
-    //Session utilisateur
-    @SessionInject
-    Session userSession;
+public class UnitResourceService extends AbstractResourceService{
     
     @POST
     @ApiOperation(value = "Post unit(s)",

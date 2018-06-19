@@ -53,12 +53,7 @@ import phis2ws.service.view.model.phis.Experiment;
 
 @Api("/experiments")
 @Path("experiments")
-public class ExperimentResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(ExperimentResourceService.class);
-    
-    //Session de l'utilisateur
-    @SessionInject
-    Session userSession;
+public class ExperimentResourceService extends AbstractResourceService{
     
     
     /**

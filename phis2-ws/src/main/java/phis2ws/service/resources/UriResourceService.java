@@ -49,13 +49,7 @@ import phis2ws.service.view.model.phis.Uri;
  *
  * @author Eloan LAGIER
  */
-public class UriResourceService {
-
-    final static Logger LOGGER = LoggerFactory.getLogger(UriResourceService.class);
-
-    //user Session 
-    @SessionInject
-    Session userSession;
+public class UriResourceService extends AbstractResourceService{
 
     /**
      * 

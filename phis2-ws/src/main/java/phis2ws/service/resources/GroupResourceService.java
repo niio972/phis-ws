@@ -52,12 +52,7 @@ import phis2ws.service.view.model.phis.Group;
 
 @Api("/group")
 @Path("groups")
-public class GroupResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(GroupResourceService.class);
-    
-    //Session de l'utilisateur
-    @SessionInject
-    Session userSession;
+public class GroupResourceService extends AbstractResourceService{
     
     /**
      * 

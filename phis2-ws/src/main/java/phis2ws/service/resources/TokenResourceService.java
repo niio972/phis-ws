@@ -84,9 +84,8 @@ import phis2ws.service.view.brapi.form.ResponseUnique;
 //@PermitAll
 @Api(value = "/brapi/v1/token")
 @Path("brapi/v1/token")
-public class TokenResourceService {
+public class TokenResourceService extends AbstractResourceService{
 
-    final static Logger LOGGER = LoggerFactory.getLogger(TokenResourceService.class);
     static final Map<String, String> ISSUERS_PUBLICKEY;
     static final List<String> GRANTTYPE_AUTHORIZED = Collections.unmodifiableList(Arrays.asList("jwt", "password"));
 

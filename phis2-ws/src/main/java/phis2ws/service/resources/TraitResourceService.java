@@ -52,12 +52,7 @@ import phis2ws.service.view.model.phis.Trait;
 
 @Api("/traits")
 @Path("traits")
-public class TraitResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(TraitResourceService.class);
-    
-    //Session utilisateur
-    @SessionInject
-    Session userSession;
+public class TraitResourceService extends AbstractResourceService{
     
     @POST
     @ApiOperation(value = "Post trait(s)",

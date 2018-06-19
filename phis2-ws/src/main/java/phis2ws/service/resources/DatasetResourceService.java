@@ -55,13 +55,8 @@ import phis2ws.service.view.model.phis.Dataset;
  */
 @Api("/datasets")
 @Path("/datasets") 
-public class DatasetResourceService {
+public class DatasetResourceService extends AbstractResourceService{
     
-    final static Logger LOGGER = LoggerFactory.getLogger(DatasetResourceService.class);
-   
-    //user session
-    @SessionInject
-    Session userSession;
     
     /**
      * 

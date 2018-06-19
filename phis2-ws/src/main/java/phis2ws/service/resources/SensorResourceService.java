@@ -58,12 +58,7 @@ import phis2ws.service.view.model.phis.Sensor;
  */
 @Api("/sensors")
 @Path("/sensors")
-public class SensorResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(SensorResourceService.class);
-    
-    //user session
-    @SessionInject
-    Session userSession;
+public class SensorResourceService extends AbstractResourceService{
     
     /**
      * 

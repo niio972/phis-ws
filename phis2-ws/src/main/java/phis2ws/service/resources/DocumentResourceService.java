@@ -80,14 +80,9 @@ import phis2ws.service.view.model.phis.Document;
 
 @Api("/documents")
 @Path("/documents")
-public class DocumentResourceService {
+public class DocumentResourceService extends AbstractResourceService{
     @Context
     UriInfo uri;
-    
-    @SessionInject
-    Session userSession;
-    
-    final static Logger LOGGER = LoggerFactory.getLogger(DocumentResourceService.class);
     
     // Gère les annotations en attene
     public final static ExecutorService threadPool = Executors.newCachedThreadPool();

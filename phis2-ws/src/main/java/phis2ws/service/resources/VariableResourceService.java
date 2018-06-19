@@ -52,12 +52,7 @@ import phis2ws.service.view.model.phis.Variable;
 
 @Api("/variables")
 @Path("variables")
-public class VariableResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(VariableResourceService.class);
-    
-    //Session de l'utilisateur
-    @SessionInject
-    Session userSession;
+public class VariableResourceService extends AbstractResourceService{
     
     /**
      * 

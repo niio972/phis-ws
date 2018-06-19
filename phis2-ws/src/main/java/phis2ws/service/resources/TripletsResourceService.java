@@ -56,12 +56,7 @@ import phis2ws.service.view.brapi.form.ResponseFormPOST;
  */
 @Api("/triplets")
 @Path("/triplets")
-public class TripletsResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(TripletsResourceService.class);
-    
-    //user session
-    @SessionInject
-    Session userSession;
+public class TripletsResourceService extends AbstractResourceService{
     
     /**
      * insert given triplets in the triplestore

@@ -56,12 +56,7 @@ import phis2ws.service.view.model.phis.Vector;
  */
 @Api("/vectors")
 @Path("/vectors")
-public class VectorResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(VectorResourceService.class);
-    
-    //user session
-    @SessionInject
-    Session userSession;
+public class VectorResourceService extends AbstractResourceService{
     
     /**
      * 

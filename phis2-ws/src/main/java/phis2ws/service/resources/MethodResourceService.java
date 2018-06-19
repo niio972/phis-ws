@@ -52,12 +52,7 @@ import phis2ws.service.view.model.phis.Method;
 
 @Api("/methods")
 @Path("methods")
-public class MethodResourceService {
-    final static Logger LOGGER = LoggerFactory.getLogger(MethodResourceService.class);
-    
-    //Session utilisateur
-    @SessionInject
-    Session userSession;
+public class MethodResourceService extends AbstractResourceService{
     
     @POST
     @ApiOperation(value = "Post method(s)",
