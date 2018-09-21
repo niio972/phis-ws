@@ -88,7 +88,6 @@ public class TripletDTO extends AbstractVerifiedClass {
         this.o = o;
     }
 
-    @URL
     @Required
     @ApiModelProperty(example = DocumentationAnnotation.EXAMPLE_TRIPLET_OBJECT_TYPE)
     public String getO_type() {
