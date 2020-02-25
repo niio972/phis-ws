@@ -55,7 +55,6 @@ public class ShinyProxyService {
     public static String SHINYPROXY_NETWORK_ID = "shiny-proxy-network";
 
     public static Path SHINYPROXY_DOCKER_FILES;
-    public static String SHINYPROXY_WEB_JAR_FILE;
     final private static String SHINYPROXY_DOCKER_IMAGE = "opensilex/shinyproxy";
 
     final private static String INTERNAL_SHINYPROXY_CONFIG_FILEPATH = "shinyProxy/shinyproxy_config";
@@ -119,7 +118,12 @@ public class ShinyProxyService {
     }
 
     private void setConstantsVariables() {
-        final String configFilePath = PropertiesFileManager.getConfigFileProperty("data_analysis_config", "shinyproxy.configFilePath");
+        String configFilePath = PropertiesFileManager.getConfigFileProperty("data_analysis_config", "shinyproxy.configFilePath");
+        if(configFilePath == null){
+            String property = "java.io.tmpdir"; 
+            // Get the temporary directory and print it.
+            configFilePath = System.getProperty(property) + File.separator + "shiny-proxy";
+        }
         SHINYPROXY_CONFIG_DIRECTORY = Paths.get(configFilePath);
         SHINYPROXY_DOCKERFILE_IMAGE = Paths.get(SHINYPROXY_CONFIG_DIRECTORY.toString(), File.separator + "Dockerfile");
         SHINYPROXY_CONFIG_FILE = Paths.get(SHINYPROXY_CONFIG_DIRECTORY.toString(), File.separator + "application.yml");
