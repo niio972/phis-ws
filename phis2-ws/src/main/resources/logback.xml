@@ -4,14 +4,10 @@
     <property resource="service.properties" />
     <appender name="STASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${logDirectory}/sunagriAPI.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${logDirectory}/sunagriAPI.log</fileNamePattern>
-            <minIndex>1</minIndex>
-            <maxIndex>10</maxIndex>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+             <fileNamePattern>${logDirectory}/sunagriAPI.log</fileNamePattern>
+             <maxHistory>7</maxHistory>
         </rollingPolicy>
-         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>100MB</maxFileSize>
-        </triggeringPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
     <!-- define log level output for specific packages -->
@@ -27,7 +23,7 @@
     <logger name="org.openrdf" level="ERROR"/>
     
     <!-- appender by log type -->
-    <root>
+    <root level="INFO">
          <appender-ref ref="STASH" />
     </root>
 </configuration>
