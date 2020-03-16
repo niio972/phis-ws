@@ -54,6 +54,11 @@
     </profiles>
     
     <dependencies>
+        <dependency> 
+            <groupId>net.logstash.logback</groupId> 
+            <artifactId>logstash-logback-encoder</artifactId> 
+            <version>6.3</version> 
+        </dependency>
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jdbc</artifactId>
