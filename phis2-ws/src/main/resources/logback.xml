@@ -5,7 +5,7 @@
     <appender name="STASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${logDirectory}/sunagriAPI.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-             <fileNamePattern>${logDirectory}/sunagriAPI.log</fileNamePattern>
+             <fileNamePattern>${logDirectory}/sunagriAPI.%d{yyyy-MM-dd}.log</fileNamePattern>
              <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
@@ -23,7 +23,7 @@
     <logger name="org.openrdf" level="ERROR"/>
     
     <!-- appender by log type -->
-    <root level="DEBUG">
+    <root level="INFO">
          <appender-ref ref="STASH" />
     </root>
 </configuration>
