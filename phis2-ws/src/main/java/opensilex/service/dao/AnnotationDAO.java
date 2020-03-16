@@ -359,12 +359,7 @@ public class AnnotationDAO extends Rdf4jDAO<Annotation> {
                     exceptions.add(new UnknownUriException(annotation.getCreator(), "the person"));
                 }
 
-                // check target
-                annotation.getTargets().forEach((targetUri) -> {
-                    if (!uriDao.existUri(targetUri)) {
-                        exceptions.add(new UnknownUriException(targetUri, "the target"));
-                    }
-                });
+                // Fix 16-03-2020 : remove target validation
             });
         } catch (RepositoryException|MalformedQueryException|QueryEvaluationException ex) {
             handleTriplestoreException(ex);
