@@ -23,7 +23,7 @@
     <logger name="org.openrdf" level="ERROR"/>
     
     <!-- appender by log type -->
-    <root level="INFO">
+    <root level="DEBUG">
          <appender-ref ref="STASH" />
     </root>
 </configuration>
