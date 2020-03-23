@@ -644,9 +644,9 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                         } else if (bindingSet.getValue(EXPERIMENT) != null) {
                             scientificObject.setExperiment(bindingSet.getValue(EXPERIMENT).stringValue());
                         }
-                        
-                        scientificObject.setLabel(bindingSet.getValue(ALIAS).stringValue());
-                        
+                        if (bindingSet.getValue(ALIAS) != null) {
+                            scientificObject.setLabel(bindingSet.getValue(ALIAS).stringValue());
+                        }
                         if (rdfType != null) {
                             scientificObject.setRdfType(rdfType);
                         } else {
