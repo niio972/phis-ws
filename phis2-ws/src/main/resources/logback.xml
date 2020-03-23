@@ -11,19 +11,10 @@
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
     <!-- define log level output for specific packages -->
-    <logger name="org.mongodb.driver" level="INFO"/>
-    <logger name="org.apache" level="INFO"/>
-    <logger name="org.apache.tomcat" level="INFO"/>
-    <logger name="org.glassfish.jersey" level="INFO"/>
-    <logger name="i.s.c.ModelConverterContextImpl" level="ERROR"/>
-    <logger name="io.swagger.jackson" level="ERROR"/>
-    <!--remove swagger debug log-->
-    <logger name="io.swagger" level="ERROR"/>
-    <logger name="org.reflections" level="WARN"/>
-    <logger name="org.openrdf" level="ERROR"/>
-    
+    <logger name="opensilex.service.dao" level="DEBUG" />
+
     <!-- appender by log type -->
-    <root level="DEBUG">
+    <root level="WARN">
          <appender-ref ref="STASH" />
     </root>
 </configuration>
