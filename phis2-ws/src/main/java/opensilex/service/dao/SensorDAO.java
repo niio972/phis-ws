@@ -58,6 +58,7 @@ import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprList;
 import org.apache.jena.sparql.path.PathFactory;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.XSD;
 import org.eclipse.rdf4j.model.Value;
 
@@ -558,7 +559,7 @@ public class SensorDAO extends Rdf4jDAO<Sensor> {
         boolean dataOk = true;
         //1. checl if user is an admin
         UserDAO userDao = new UserDAO();
-        if (userDao.isAdmin(user)) {
+//        if (userDao.isAdmin(user)) {
             //2. check data
             UriDAO uriDao = new UriDAO();
             for (Sensor sensor : sensors) {
@@ -582,10 +583,10 @@ public class SensorDAO extends Rdf4jDAO<Sensor> {
                     java.util.logging.Logger.getLogger(SensorDAO.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        } else { //user is not an admin
-            dataOk = false;
-            checkStatus.add(new Status(StatusCodeMsg.ACCESS_DENIED, StatusCodeMsg.ERR, StatusCodeMsg.ADMINISTRATOR_ONLY));
-        }
+//        } else { //user is not an admin
+//            dataOk = false;
+//            checkStatus.add(new Status(StatusCodeMsg.ACCESS_DENIED, StatusCodeMsg.ERR, StatusCodeMsg.ADMINISTRATOR_ONLY));
+//        }
         
         check = new POSTResultsReturn(dataOk, null, dataOk);
         check.statusList = checkStatus;
@@ -629,7 +630,8 @@ public class SensorDAO extends Rdf4jDAO<Sensor> {
         spql.addInsert(graph, sensorUri, relationHasBrand, sensor.getBrand() );
         spql.addInsert(graph, sensorUri, relationInServiceDate, sensor.getInServiceDate());
         spql.addInsert(graph, sensorUri, relationPersonInCharge, sensor.getPersonInCharge() );
-        
+        spql.addInsert(graph, sensorUri, DCTerms.creator, user.getUri() ); 
+         
         if (sensor.getSerialNumber() != null) {
             Property relationSerialNumber = ResourceFactory.createProperty(Oeso.RELATION_HAS_SERIAL_NUMBER.toString());
             spql.addInsert(graph, sensorUri, relationSerialNumber, sensor.getSerialNumber() );
