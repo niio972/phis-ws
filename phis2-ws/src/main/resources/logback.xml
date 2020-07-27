@@ -19,10 +19,13 @@
     
     <!-- define log level output for specific packages -->
     <logger name="opensilex.service" level="DEBUG" />
-    
+    <logger name="org.apache" level="ERROR" />
+    <logger name="o.a.h" level="ERROR" />
+    <logger name="o.h.v" level="ERROR" />
+
     <!-- appender by log type -->
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="STASH" />
-        <!-- <appender-ref ref="STDOUT_DEBUG" /> -->
+        <!-- <appender-ref ref="STDOUT_DEBUG" />  -->
     </root>
 </configuration>

@@ -272,7 +272,8 @@ public class ExperimentSQLDAO extends PhisDAO<Experiment, ExperimentDTO> {
             
             UserDAO userDao = new UserDAO();
             userDao.isAdmin(user);
-            boolean isAdmin = (user.getAdmin().equals("t") || user.getAdmin().equals("true"));
+//            boolean isAdmin = (user.getAdmin().equals("t") || user.getAdmin().equals("true"));
+            boolean isAdmin = (user.getEmail().equals("admin@opensilex.org"));
 
             while (queryResult.next()) {
                 //SILEX:access

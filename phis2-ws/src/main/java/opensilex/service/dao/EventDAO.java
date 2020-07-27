@@ -46,6 +46,7 @@ import opensilex.service.utils.date.Dates;
 import opensilex.service.utils.sparql.SPARQLStringBuilder;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.vocabulary.DCTerms;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -434,7 +435,11 @@ public class EventDAO extends Rdf4jDAO<Event> {
         Resource eventResource = ResourceFactory.createResource(event.getUri());
         Node eventType = NodeFactory.createURI(event.getType());
         updateBuilder.addInsert(graph, eventResource, RDF.type, eventType);
-
+        
+        // Add creator to objects
+        Node creator =  NodeFactory.createURI(user.getUri());
+        updateBuilder.addInsert(graph, event, DCTerms.creator, creator);
+        
         addInsertInstantToUpdateBuilder(
                 updateBuilder,
                 graph,
