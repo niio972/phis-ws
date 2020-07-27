@@ -485,9 +485,9 @@ public class EventDAO extends Rdf4jDAO<Event> {
 
         // Check if user is admin
         UserDAO userDAO = new UserDAO();
-//        if (!userDAO.isAdmin(user)) {
-//            throw new NotAnAdminException();
-//        } else {
+       if (!userDAO.isAdmin(user)) {
+           throw new NotAnAdminException();
+       } else {
             ConcernedItemDAO concernedItemDao
                     = new ConcernedItemDAO(user, Contexts.EVENTS.toString(), Oeev.concerns.getURI());
             PropertyDAO propertyDao = new PropertyDAO();
@@ -531,7 +531,7 @@ public class EventDAO extends Rdf4jDAO<Event> {
             } catch (RepositoryException | MalformedQueryException | QueryEvaluationException ex) {
                 handleTriplestoreException(ex);
             }
-//        }
+       }
 
         if (exceptions.size() > 0) {
             throw new DAODataErrorAggregateException(exceptions);
