@@ -8,6 +8,7 @@
 package opensilex.service.view.model.provenance;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Provenance model.
@@ -31,6 +32,11 @@ public class Provenance {
      * Comment.
      */
     protected String comment;
+    
+    /**
+    * Experiments.
+    */
+    protected List<String> experiments;
     
     /**
      * Additional information for the provenance. 
@@ -74,4 +80,13 @@ public class Provenance {
     public void setMetadata(Object metadata) {
         this.metadata = metadata;
     }
+
+    public List<String> getExperiments() {
+        return experiments;
+    }
+
+    public void setExperiments(List<String> experiments) {
+        this.experiments = experiments;
+    }
+    
 }

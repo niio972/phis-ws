@@ -8,6 +8,7 @@
 package opensilex.service.resource.dto.provenance;
 
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import opensilex.service.documentation.DocumentationAnnotation;
 import opensilex.service.resource.dto.manager.AbstractVerifiedClass;
 import opensilex.service.resource.validation.interfaces.Required;
@@ -32,6 +33,12 @@ public class ProvenancePostDTO extends AbstractVerifiedClass {
     protected String comment;
     
     /**
+     * List of experiment ids
+     * @example ["http://www.opensilex.org/sunagri/SUA2019-100","http://www.opensilex.org/sunagri/SUA2019-1"]
+     */
+    protected List<String> experiments;
+    
+    /**
      * Additional information for the provenance. 
      * Its content depends on the type of the provenance. 
      * @example 
@@ -48,7 +55,7 @@ public class ProvenancePostDTO extends AbstractVerifiedClass {
         provenance.setLabel(label);
         provenance.setComment(comment);
         provenance.setMetadata(metadata);
-        
+        provenance.setExperiments(experiments);
         return provenance;
     }
     
@@ -79,4 +86,13 @@ public class ProvenancePostDTO extends AbstractVerifiedClass {
     public void setMetadata(Object metadata) {
         this.metadata = metadata;
     }
+
+    public List<String> getExperiments() {
+        return experiments;
+    }
+
+    public void setExperiments(List<String> experiments) {
+        this.experiments = experiments;
+    }    
+    
 }
