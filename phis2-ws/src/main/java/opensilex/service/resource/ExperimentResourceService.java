@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -47,6 +49,8 @@ import opensilex.service.dao.DataDAO;
 import opensilex.service.dao.ExperimentRdf4jDAO;
 import opensilex.service.dao.ExperimentSQLDAO;
 import opensilex.service.dao.ProvenanceDAO;
+import opensilex.service.dao.ScientificObjectRdf4jDAO;
+import opensilex.service.dao.VariableDAO;
 import opensilex.service.documentation.DocumentationAnnotation;
 import opensilex.service.documentation.StatusCodeMsg;
 import opensilex.service.model.Data;
@@ -62,20 +66,23 @@ import opensilex.service.view.brapi.form.ResponseFormGET;
 import opensilex.service.view.brapi.form.ResponseFormPOST;
 import opensilex.service.result.ResultForm;
 import opensilex.service.model.Experiment;
+import opensilex.service.ontology.Oeso;
 import opensilex.service.resource.dto.data.DataDTO;
+import opensilex.service.resource.dto.data.DataSearchDTO;
 import opensilex.service.view.model.provenance.Provenance;
 
 /**
  * Experiment resource service.
+ *
  * @update [Morgane Vidal] 31 Oct. 2017: refactor trial to experiment
- * @update [Morgane Vidal] 20 Dec. 2018: add PUT services:
- *                          - experiment/{uri}/variables 
- *                          - experiment/{uri}/sensors
+ * @update [Morgane Vidal] 20 Dec. 2018: add PUT services: -
+ * experiment/{uri}/variables - experiment/{uri}/sensors
  * @author Morgane Vidal <morgane.vidal@inra.fr>
  */
 @Api("/experiments")
 @Path("experiments")
 public class ExperimentResourceService extends ResourceService {
+
     final static Logger LOGGER = LoggerFactory.getLogger(ExperimentResourceService.class);
 
     /**
@@ -94,7 +101,7 @@ public class ExperimentResourceService extends ResourceService {
      */
     @GET
     @ApiOperation(value = "Get all experiments corresponding to the searched params given",
-                  notes = "Retrieve all experiments authorized for the user corresponding to the searched params given")
+            notes = "Retrieve all experiments authorized for the user corresponding to the searched params given")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Retrieve all experiments", response = Experiment.class, responseContainer = "List"),
         @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
@@ -102,9 +109,9 @@ public class ExperimentResourceService extends ResourceService {
         @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)})
     @ApiImplicitParams({
         @ApiImplicitParam(name = "Authorization", required = true,
-                          dataType = "string", paramType = "header",
-                          value = DocumentationAnnotation.ACCES_TOKEN,
-                          example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Produces(MediaType.APPLICATION_JSON)
     public Response getExperimentsBySearch(
@@ -159,6 +166,7 @@ public class ExperimentResourceService extends ResourceService {
 
     /**
      * Get an experiment.
+     *
      * @param experimentURI
      * @param limit
      * @param page
@@ -167,7 +175,7 @@ public class ExperimentResourceService extends ResourceService {
     @GET
     @Path("{experiment}")
     @ApiOperation(value = "Get an experiment",
-                  notes = "Retrieve an experiment. Need URL encoded experiment URI (Unique resource identifier).")
+            notes = "Retrieve an experiment. Need URL encoded experiment URI (Unique resource identifier).")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Retrieve an experiment.", response = Experiment.class, responseContainer = "List"),
         @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
@@ -176,26 +184,26 @@ public class ExperimentResourceService extends ResourceService {
     })
     @ApiImplicitParams({
         @ApiImplicitParam(name = "Authorization", required = true,
-                          dataType = "string", paramType = "header",
-                          value = DocumentationAnnotation.ACCES_TOKEN,
-                          example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Produces(MediaType.APPLICATION_JSON)
     public Response getExperimentDetail(
             @ApiParam(
-                    value = DocumentationAnnotation.EXPERIMENT_URI_DEFINITION, 
-                    example = DocumentationAnnotation.EXAMPLE_EXPERIMENT_URI, 
-                    required = true) 
-                @PathParam("experiment") 
-                @URL @Required String experimentURI,
-            @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) 
-                @QueryParam("pageSize") 
-                @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) 
-                @Min(0) int limit,
-            @ApiParam(value = DocumentationAnnotation.PAGE) 
-                @QueryParam("page") 
-                @DefaultValue(DefaultBrapiPaginationValues.PAGE) 
-                @Min(0) int page) {
+                    value = DocumentationAnnotation.EXPERIMENT_URI_DEFINITION,
+                    example = DocumentationAnnotation.EXAMPLE_EXPERIMENT_URI,
+                    required = true)
+            @PathParam("experiment")
+            @URL @Required String experimentURI,
+            @ApiParam(value = DocumentationAnnotation.PAGE_SIZE)
+            @QueryParam("pageSize")
+            @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE)
+            @Min(0) int limit,
+            @ApiParam(value = DocumentationAnnotation.PAGE)
+            @QueryParam("page")
+            @DefaultValue(DefaultBrapiPaginationValues.PAGE)
+            @Min(0) int page) {
         if (experimentURI == null) {
             final Status status = new Status("Access error", StatusCodeMsg.ERR, "Empty Experiment URI");
             return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseFormGET(status)).build();
@@ -216,7 +224,7 @@ public class ExperimentResourceService extends ResourceService {
      */
     @POST
     @ApiOperation(value = "Post a experiment",
-                  notes = "Register a new experiment in the database")
+            notes = "Register a new experiment in the database")
     @ApiResponses(value = {
         @ApiResponse(code = 201, message = "Experiment saved", response = ResponseFormPOST.class),
         @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
@@ -225,9 +233,9 @@ public class ExperimentResourceService extends ResourceService {
     })
     @ApiImplicitParams({
         @ApiImplicitParam(name = "Authorization", required = true,
-                          dataType = "string", paramType = "header",
-                          value = DocumentationAnnotation.ACCES_TOKEN,
-                          example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -269,9 +277,10 @@ public class ExperimentResourceService extends ResourceService {
             return Response.status(Response.Status.BAD_REQUEST).entity(postResponse).build();
         }
     }
-    
+
     /**
      * Experiment update service.
+     *
      * @param experiments
      * @param context
      * @return the update result
@@ -286,9 +295,9 @@ public class ExperimentResourceService extends ResourceService {
     })
     @ApiImplicitParams({
         @ApiImplicitParam(name = "Authorization", required = true,
-                          dataType = "string", paramType = "header",
-                          value = DocumentationAnnotation.ACCES_TOKEN,
-                          example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -321,7 +330,7 @@ public class ExperimentResourceService extends ResourceService {
             return Response.status(Response.Status.BAD_REQUEST).entity(postResponse).build();
         }
     }
-    
+
     /**
      * Updates the variables linked to an experiment.
      * @example
@@ -373,22 +382,22 @@ public class ExperimentResourceService extends ResourceService {
     public Response putVariables(
             @ApiParam(value = DocumentationAnnotation.LINK_VARIABLES_DEFINITION) @URL ArrayList<String> variables,
             @ApiParam(
-                    value = DocumentationAnnotation.EXPERIMENT_URI_DEFINITION, 
-                    example = DocumentationAnnotation.EXAMPLE_EXPERIMENT_URI, 
-                    required = true) 
-                @PathParam("uri") @Required @URL String uri,
+                    value = DocumentationAnnotation.EXPERIMENT_URI_DEFINITION,
+                    example = DocumentationAnnotation.EXAMPLE_EXPERIMENT_URI,
+                    required = true)
+            @PathParam("uri") @Required @URL String uri,
             @Context HttpServletRequest context) {
         AbstractResultForm postResponse = null;
-        
+
         ExperimentSQLDAO experimentDAO = new ExperimentSQLDAO();
         if (context.getRemoteAddr() != null) {
             experimentDAO.remoteUserAdress = context.getRemoteAddr();
         }
-        
+
         experimentDAO.user = userSession.getUser();
-        
+
         POSTResultsReturn result = experimentDAO.checkAndUpdateLinkedVariables(uri, variables);
-        
+
         if (result.getHttpStatus().equals(Response.Status.CREATED)) {
             postResponse = new ResponseFormPOST(result.statusList);
             postResponse.getMetadata().setDatafiles(result.getCreatedResources());
@@ -397,10 +406,10 @@ public class ExperimentResourceService extends ResourceService {
                 || result.getHttpStatus().equals(Response.Status.INTERNAL_SERVER_ERROR)) {
             postResponse = new ResponseFormPOST(result.statusList);
         }
-        
+
         return Response.status(result.getHttpStatus()).entity(postResponse).build();
     }
-    
+
     /**
      * Updates the sensors linked to an experiment.
      * @example
@@ -449,23 +458,23 @@ public class ExperimentResourceService extends ResourceService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response putSensors(
-        @ApiParam(value = DocumentationAnnotation.LINK_SENSORS_DEFINITION) @URL ArrayList<String> sensors,
-        @ApiParam(value = DocumentationAnnotation.EXPERIMENT_URI_DEFINITION, example = DocumentationAnnotation.EXAMPLE_EXPERIMENT_URI, required = true) 
-            @PathParam("uri") 
-            @Required 
+            @ApiParam(value = DocumentationAnnotation.LINK_SENSORS_DEFINITION) @URL ArrayList<String> sensors,
+            @ApiParam(value = DocumentationAnnotation.EXPERIMENT_URI_DEFINITION, example = DocumentationAnnotation.EXAMPLE_EXPERIMENT_URI, required = true)
+            @PathParam("uri")
+            @Required
             @URL String uri,
-        @Context HttpServletRequest context) {
+            @Context HttpServletRequest context) {
         AbstractResultForm postResponse = null;
-        
+
         ExperimentSQLDAO experimentDAO = new ExperimentSQLDAO();
         if (context.getRemoteAddr() != null) {
             experimentDAO.remoteUserAdress = context.getRemoteAddr();
         }
-        
+
         experimentDAO.user = userSession.getUser();
-        
+
         POSTResultsReturn result = experimentDAO.checkAndUpdateLinkedSensors(uri, sensors);
-        
+
         if (result.getHttpStatus().equals(Response.Status.CREATED)) {
             postResponse = new ResponseFormPOST(result.statusList);
             postResponse.getMetadata().setDatafiles(result.getCreatedResources());
@@ -474,12 +483,13 @@ public class ExperimentResourceService extends ResourceService {
                 || result.getHttpStatus().equals(Response.Status.INTERNAL_SERVER_ERROR)) {
             postResponse = new ResponseFormPOST(result.statusList);
         }
-        
+
         return Response.status(result.getHttpStatus()).entity(postResponse).build();
     }
 
     /**
      * Gets experiment data.
+     *
      * @param experimentSQLDao
      * @return experiments found
      */
@@ -494,7 +504,7 @@ public class ExperimentResourceService extends ResourceService {
             return noResultFound(getResponse, statusList);
         } else {
             experiments = experimentSQLDao.allPaginate();
-            
+
             if (experiments == null || experimentsCount == null) { //sql error
                 getResponse = new ResultForm<>(0, 0, experiments, true, experimentsCount);
                 return sqlError(getResponse, statusList);
@@ -508,7 +518,6 @@ public class ExperimentResourceService extends ResourceService {
             }
         }
     }
-
 
     /**
      * Experiment Data GET service.
@@ -539,12 +548,15 @@ public class ExperimentResourceService extends ResourceService {
      */
     @GET
     @Path("{uri}/data")
-    @ApiOperation(value = "Get data mesured in an experiment")
+    @ApiOperation(value = "Get data corresponding to the search parameters given.",
+            notes = "Retrieve all data corresponding to the search parameters given,"
+            + "<br/>Date parameters could be either a datetime like: " + DocumentationAnnotation.EXAMPLE_XSDDATETIME
+            + "<br/>or simply a date like: " + DocumentationAnnotation.EXAMPLE_DATE)
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "Data mesured in an experiment", response = ResponseFormPOST.class),
+        @ApiResponse(code = 200, message = "Retrieve all data", response = Data.class, responseContainer = "List"),
         @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
         @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
-        @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_SEND_DATA)
+        @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
     })
     @ApiImplicitParams({
         @ApiImplicitParam(name = GlobalWebserviceValues.AUTHORIZATION, required = true,
@@ -552,87 +564,335 @@ public class ExperimentResourceService extends ResourceService {
                 value = DocumentationAnnotation.ACCES_TOKEN,
                 example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
-    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getExperimentData(
-            @PathParam("uri") @Required @URL String uri,
-            @ApiParam(value = "Search by variable", example = DocumentationAnnotation.EXAMPLE_VARIABLE_URI, required = true) @QueryParam("variable") @Required @URL String variablesUri,
-            @ApiParam(value = "Search by provenance", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_URI) @QueryParam("provenance") @URL String provenanceUri,
+    public Response getExperimentDataSearch(
+            @PathParam("uri")
+            @Required
+            @URL String experimentUri,
+            @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam(GlobalWebserviceValues.PAGE_SIZE) @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) @Min(0) int pageSize,
+            @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam(GlobalWebserviceValues.PAGE) @DefaultValue(DefaultBrapiPaginationValues.PAGE) @Min(0) int page,
+            @ApiParam(value = "Search by variable uri", example = DocumentationAnnotation.EXAMPLE_VARIABLE_URI) @QueryParam("variableUri") @URL @Required String variableUri,
             @ApiParam(value = "Search by minimal date", example = DocumentationAnnotation.EXAMPLE_XSDDATETIME) @QueryParam("startDate") @Date({DateFormat.YMDTHMSZ, DateFormat.YMD}) String startDate,
             @ApiParam(value = "Search by maximal date", example = DocumentationAnnotation.EXAMPLE_XSDDATETIME) @QueryParam("endDate") @Date({DateFormat.YMDTHMSZ, DateFormat.YMD}) String endDate,
-            @ApiParam(value = "Search by object uri", example = DocumentationAnnotation.EXAMPLE_SCIENTIFIC_OBJECT_URI) @QueryParam("object") @URL String object,
-            @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam(GlobalWebserviceValues.PAGE_SIZE) @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) @Min(0) int pageSize,
-            @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam(GlobalWebserviceValues.PAGE) @DefaultValue(DefaultBrapiPaginationValues.PAGE) @Min(0) int page
+            @ApiParam(value = "Search by object uri", example = DocumentationAnnotation.EXAMPLE_SCIENTIFIC_OBJECT_URI) @QueryParam("objectUri") @URL String objectUri,
+            @ApiParam(value = "Search by object label", example = DocumentationAnnotation.EXAMPLE_SCIENTIFIC_OBJECT_ALIAS) @QueryParam("objectLabel") String objectLabel,
+            @ApiParam(value = "Search by provenance uri", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_URI) @QueryParam("provenanceUri") @URL String provenanceUri,
+            @ApiParam(value = "Search by provenance label", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_LABEL) @QueryParam("provenanceLabel") String provenanceLabel,
+            @ApiParam(value = "Date search result order ('true' for ascending and 'false' for descending)", example = "true") @QueryParam("dateSortAsc") boolean dateSortAsc
     ) {
-        DataDAO dataDAO = new DataDAO();
-        dataDAO.setPage(page);
-        dataDAO.setPageSize(pageSize);
-
-        ProvenanceDAO provenanceDAO = new ProvenanceDAO();
-        provenanceDAO.setPage(0);
-        provenanceDAO.setPageSize(500);
-
-        //1. Get associated sensors
-        ArrayList<String> provenanceUrisAssociatedToSensor = new ArrayList<>();
-        if (provenanceUri != null) {
-            provenanceUrisAssociatedToSensor.add(provenanceUri);
-        } else {
-            //List provenances
-            
-            // search provenance by experiments
-            Provenance searchProvenance = new Provenance();
-            String queryExp = BasicDBObjectBuilder.start("experiments", new BasicDBObject("$in", Collections.singletonList(uri))).get().toString();
-            ArrayList<Provenance> provenances = provenanceDAO.getProvenances(searchProvenance, queryExp);
-            for (Provenance provenance : provenances) {
-                provenanceUrisAssociatedToSensor.add(provenance.getUri());
-            }
-            // Search provenance by sensors
-            ExperimentRdf4jDAO experimentDao = new ExperimentRdf4jDAO();
-            HashMap<String, String> sensors = experimentDao.getSensors(uri);
-            Set<String> sensorskeySet = sensors.keySet();
-            if (!sensors.isEmpty()) {
-                String querySensor = BasicDBObjectBuilder.start("metadata.prov:Agent.prov:id", new BasicDBObject("$in", sensorskeySet)).get().toString();
-                ArrayList<Provenance> provenancesSensors = provenanceDAO.getProvenances(searchProvenance, querySensor);
-                for (Provenance provenance : provenancesSensors) {
-                    if (!provenanceUrisAssociatedToSensor.contains(provenance.getUri())) {
-                        provenanceUrisAssociatedToSensor.add(provenance.getUri());
-                    }
-                }
-            }
-        }
-        List<String> objectsUris = new ArrayList<>();
-        List<Data> dataFounded = new ArrayList<>();
-        Integer totalCount = 0;
-        if (!provenanceUrisAssociatedToSensor.isEmpty()) {
-            if (object != null) {
-                objectsUris.add(object);
-            }
-            //2. Get sensor data count
-            totalCount = dataDAO.count(variablesUri, startDate, endDate, objectsUris, provenanceUrisAssociatedToSensor);
-            //3. Get sensor data
-            if (totalCount > 0) {
-                dataFounded = dataDAO.find(page, pageSize, variablesUri, startDate, endDate, objectsUris, provenanceUrisAssociatedToSensor);
-            }
-        }
-        //4. Return result
+        ArrayList<DataSearchDTO> list = new ArrayList<>();
         ArrayList<Status> statusList = new ArrayList<>();
-        ArrayList<DataDTO> sensorsToReturn = new ArrayList<>();
-        ResultForm<DataDTO> getResponse;
-        if (dataFounded == null) { //Request failure
-            getResponse = new ResultForm<>(0, 0, sensorsToReturn, true);
-            return noResultFound(getResponse, statusList);
-        } else if (dataFounded.isEmpty()) { //No result found
-            getResponse = new ResultForm<>(0, 0, sensorsToReturn, true);
-            return noResultFound(getResponse, statusList);
-        } else { //Results
-            //Convert all objects to DTOs
-            dataFounded.forEach((data) -> {
-                sensorsToReturn.add(new DataDTO(data));
-            });
+        ResultForm<DataSearchDTO> getResponse;
 
-            getResponse = new ResultForm<>(pageSize, page, sensorsToReturn, true, totalCount);
+        DataDAO dataDAO = new DataDAO();
+
+        List<String> objectsUris = new ArrayList<>();
+        List<String> provenancesUris = new ArrayList<>();
+
+        Map<String, List<String>> objectsUrisAndLabels = new HashMap<>();
+        Map<String, String> provenancesUrisAndLabels = new HashMap<>();
+
+        //1. Get list of objects uris corresponding to the label given if needed.
+        ScientificObjectRdf4jDAO scientificObjectDAO = new ScientificObjectRdf4jDAO();
+        if (objectUri != null && !objectUri.isEmpty()) {
+            objectsUrisAndLabels.put(objectUri, scientificObjectDAO.findLabelsForUri(objectUri));
+        } else if (objectLabel != null && !objectLabel.isEmpty()) { //We need to get the list of the uris of the scientific object with this label (like)
+            objectsUrisAndLabels = scientificObjectDAO.findUriAndLabelsByLabelAndRdfType(objectLabel, Oeso.CONCEPT_SCIENTIFIC_OBJECT.toString());
+        }
+
+        for (String uri : objectsUrisAndLabels.keySet()) {
+            objectsUris.add(uri);
+        }
+
+        //2. Get list of provenances uris corresponding to the label given if needed.
+        ProvenanceDAO provenanceDAO = new ProvenanceDAO();
+        if (provenanceUri != null && !provenanceUri.isEmpty()) {
+            try {
+                Provenance findById = provenanceDAO.findById(provenanceUri);
+                if (findById.getExperiments().contains(experimentUri)) {
+                    //If the provenance URI is given, we need the provenance label
+                    provenancesUris.add(provenanceUri);
+                }
+            } catch (Exception ex) {
+LOGGER.error(ex.getMessage(),ex);           
+            }
+
+        } else if (provenanceLabel != null && !provenanceLabel.isEmpty()) {
+            //If the provenance URI is empty and a label is given, we search the provenance(s) with the given label (like)
+            provenancesUrisAndLabels = provenanceDAO.findUriAndLabelsByLabel(provenanceLabel);
+        }
+
+        for (String uri : provenancesUrisAndLabels.keySet()) {
+              Provenance findById;
+            try {
+                findById = provenanceDAO.findById(uri);
+                  if (findById.getExperiments().contains(experimentUri)) {
+                    //If the provenance URI is given, we need the provenance label
+                    provenancesUris.add(uri);
+                }
+            } catch (Exception ex) {
+                LOGGER.error(ex.getMessage(),ex);
+            }
+              
+            
+        }
+
+        //3. Get variable label
+        VariableDAO variableDAO = new VariableDAO();
+        if (!variableDAO.existAndIsVariable(variableUri)) {
+            // Request failure
+            getResponse = new ResultForm<>(0, 0, list, true, 0);
+            statusList.add(new Status(StatusCodeMsg.DATA_ERROR, StatusCodeMsg.ERR, "Unknown variable URI : " + variableUri));
+            getResponse.setStatus(statusList);
+            return Response.status(Response.Status.NOT_FOUND).entity(getResponse).build();
+        }
+        String variableLabel = variableDAO.findLabelsForUri(variableUri).get(0);
+
+        //4. Get count
+        Integer totalCount = dataDAO.count(variableUri, startDate, endDate, objectsUris, provenancesUris);
+
+        //5. Get data
+        List<Data> dataList = dataDAO.find(page, pageSize, variableUri, startDate, endDate, objectsUris, provenancesUris);
+
+        //6. Return result
+        if (dataList == null) {
+            // Request failure
+            getResponse = new ResultForm<>(0, 0, list, true, 0);
+            return noResultFound(getResponse, statusList);
+        } else if (dataList.isEmpty()) {
+            // No results
+            getResponse = new ResultForm<>(0, 0, list, true, 0);
+            return noResultFound(getResponse, statusList);
+        } else {
+            // Convert all data object to DTO's
+            for (Data data : dataList) {
+                if (data.getObjectUri() != null && !objectsUrisAndLabels.containsKey(data.getObjectUri())) {
+                    //We need to get the labels of the object
+                    objectsUrisAndLabels.put(data.getObjectUri(), scientificObjectDAO.findLabelsForUri(data.getObjectUri()));
+                }
+
+                if (!provenancesUrisAndLabels.containsKey(data.getProvenanceUri())) {
+                    //We need to get the label of the provenance
+                    provenancesUrisAndLabels.put(data.getProvenanceUri(), provenanceDAO.findLabelByUri(data.getProvenanceUri()));
+                }
+
+                //Get provenance label
+                String dataProvenanceLabel = provenancesUrisAndLabels.get(data.getProvenanceUri());
+                //Get object labels
+                List<String> dataObjectLabels = new ArrayList<>();
+                if (objectsUrisAndLabels.get(data.getObjectUri()) != null) {
+                    dataObjectLabels = objectsUrisAndLabels.get(data.getObjectUri());
+                }
+
+                list.add(new DataSearchDTO(data, dataProvenanceLabel, dataObjectLabels, variableLabel));
+            }
+
+            // Return list of DTO
+            getResponse = new ResultForm<>(pageSize, page, list, true, totalCount);
             getResponse.setStatus(statusList);
             return Response.status(Response.Status.OK).entity(getResponse).build();
         }
     }
+
+//    //List provenances
+//    // search provenance by experiments
+//    Provenance searchProvenance = new Provenance();
+//    String queryExp = BasicDBObjectBuilder.start("experiments", new BasicDBObject("$in", Collections.singletonList(uri))).get().toString();
+//    ArrayList<Provenance> provenances = provenanceDAO.getProvenances(searchProvenance, queryExp);
+//    for (Provenance provenance : provenances) {
+//                provenanceUrisAssociatedToSensor.add(provenance.getUri());
+//    }
+//    // Search provenance by sensors
+//    ExperimentRdf4jDAO experimentDao = new ExperimentRdf4jDAO();
+//    HashMap<String, String> sensors = experimentDao.getSensors(uri);
+//    Set<String> sensorskeySet = sensors.keySet();
+//
+//    if (!sensors.isEmpty () 
+//        ) {
+//                String querySensor = BasicDBObjectBuilder.start("metadata.prov:Agent.prov:id", new BasicDBObject("$in", sensorskeySet)).get().toString();
+//        ArrayList<Provenance> provenancesSensors = provenanceDAO.getProvenances(searchProvenance, querySensor);
+//        for (Provenance provenance : provenancesSensors) {
+//            if (!provenanceUrisAssociatedToSensor.contains(provenance.getUri())) {
+//                provenanceUrisAssociatedToSensor.add(provenance.getUri());
+//            }
+//        }
+//    }
+
+    /**
+     * Service to search data
+     *
+     * @param uri
+     * @param pageSize
+     * @param page
+     * @param variableUri
+     * @param startDate
+     * @param endDate
+     * @param objectUri
+     * @param objectLabel
+     * @param provenanceUri
+     * @param provenanceLabel
+     * @param dateSortAsc
+     * @return list of the data corresponding to the search params given
+     * @example { "metadata": { "pagination": { "pageSize": 20, "currentPage":
+     * 0, "totalCount": 3, "totalPages": 1 }, "status": [], "datafiles": [] },
+     * "result": { "data": [ { "uri":
+     * "http://www.opensilex.org/opensilex/id/data/k3zilz2rrjhkxo4ppy43372rr5hyrbehjuf2stecbekvkxyqcjdq84b1df953972418a8d5808ba2bca3baedfsf",
+     * "provenance": { "uri":
+     * "http://www.opensilex.org/opensilex/id/provenance/1552386023784",
+     * "label": "provenance-label" }, "object": { "uri":
+     * "http://www.opensilex.org/opensilex/2019/o19000060", "labels": [ "2" ] },
+     * "variable": { "uri":
+     * "http://www.opensilex.org/opensilex/id/variables/v001", "label":
+     * "trait_method_unit" }, "date": "2014-01-04T00:55:00+0100", "value": "19"
+     * }, ] } }
+     */
+//    @GET
+////    @Path("{uri}/data")
+//    @ApiOperation(value = "Get data corresponding to the search parameters given.",
+//            notes = "Retrieve all data corresponding to the search parameters given,"
+//            + "<br/>Date parameters could be either a datetime like: " + DocumentationAnnotation.EXAMPLE_XSDDATETIME
+//            + "<br/>or simply a date like: " + DocumentationAnnotation.EXAMPLE_DATE)
+//    @ApiResponses(value = {
+//        @ApiResponse(code = 200, message = "Retrieve all data", response = DataSearchDTO.class, responseContainer = "List"),
+//        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
+//        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+//        @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
+//    })
+//    @ApiImplicitParams({
+//        @ApiImplicitParam(name = GlobalWebserviceValues.AUTHORIZATION, required = true,
+//                dataType = GlobalWebserviceValues.DATA_TYPE_STRING, paramType = GlobalWebserviceValues.HEADER,
+//                value = DocumentationAnnotation.ACCES_TOKEN,
+//                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+//    })
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public Response getDataSearch(
+//            @PathParam("uri") @Required @URL String uri,
+//            @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam(GlobalWebserviceValues.PAGE_SIZE) @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) @Min(0) int pageSize,
+//            @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam(GlobalWebserviceValues.PAGE) @DefaultValue(DefaultBrapiPaginationValues.PAGE) @Min(0) int page,
+//            @ApiParam(value = "Search by variable uri", example = DocumentationAnnotation.EXAMPLE_VARIABLE_URI) @QueryParam("variableUri") @URL @Required String variableUri,
+//            @ApiParam(value = "Search by minimal date", example = DocumentationAnnotation.EXAMPLE_XSDDATETIME) @QueryParam("startDate") @Date({DateFormat.YMDTHMSZ, DateFormat.YMD}) String startDate,
+//            @ApiParam(value = "Search by maximal date", example = DocumentationAnnotation.EXAMPLE_XSDDATETIME) @QueryParam("endDate") @Date({DateFormat.YMDTHMSZ, DateFormat.YMD}) String endDate,
+//            @ApiParam(value = "Search by object uri", example = DocumentationAnnotation.EXAMPLE_SCIENTIFIC_OBJECT_URI) @QueryParam("objectUri") @URL String objectUri,
+//            @ApiParam(value = "Search by object label", example = DocumentationAnnotation.EXAMPLE_SCIENTIFIC_OBJECT_ALIAS) @QueryParam("objectLabel") String objectLabel,
+//            @ApiParam(value = "Search by provenance uri", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_URI) @QueryParam("provenanceUri") @URL String provenanceUri,
+//            @ApiParam(value = "Search by provenance label", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_LABEL) @QueryParam("provenanceLabel") String provenanceLabel,
+//            @ApiParam(value = "Date search result order ('true' for ascending and 'false' for descending)", example = "true") @QueryParam("dateSortAsc") boolean dateSortAsc
+//    ) {
+//        ArrayList<DataSearchDTO> list = new ArrayList<>();
+//        ArrayList<Status> statusList = new ArrayList<>();
+//        ResultForm<DataSearchDTO> getResponse;
+//
+//        DataDAO dataDAO = new DataDAO();
+//
+//        List<String> objectsUris = new ArrayList<>();
+//        List<String> provenancesUris = new ArrayList<>();
+//
+//        Map<String, List<String>> objectsUrisAndLabels = new HashMap<>();
+//        Map<String, String> provenancesUrisAndLabels = new HashMap<>();
+//
+//        //1. Get list of objects uris corresponding to the label given if needed.
+//        ScientificObjectRdf4jDAO scientificObjectDAO = new ScientificObjectRdf4jDAO();
+//        if (objectUri != null && !objectUri.isEmpty()) {
+//            objectsUrisAndLabels.put(objectUri, scientificObjectDAO.findLabelsForUri(objectUri));
+//        } else if (objectLabel != null && !objectLabel.isEmpty()) { //We need to get the list of the uris of the scientific object with this label (like)
+//            objectsUrisAndLabels = scientificObjectDAO.findUriAndLabelsByLabelAndRdfType(objectLabel, Oeso.CONCEPT_SCIENTIFIC_OBJECT.toString());
+//        }
+//
+//        for (String objectUriInfo : objectsUrisAndLabels.keySet()) {
+//            objectsUris.add(objectUriInfo);
+//        }
+//
+//        //2. Get list of provenances uris corresponding to the label given if needed.
+//        ProvenanceDAO provenanceDAO = new ProvenanceDAO();
+//        if (provenanceUri != null && !provenanceUri.isEmpty()) {
+//            //If the provenance URI is given, we need the provenance label
+//            provenancesUris.add(provenanceUri);
+//        } else if (provenanceLabel != null && !provenanceLabel.isEmpty()) {
+//            //If the provenance URI is empty and a label is given, we search the provenance(s) with the given label (like)
+//            provenancesUrisAndLabels = provenanceDAO.findUriAndLabelsByLabel(provenanceLabel);
+//        } else {
+//            // search provenance by experiments
+//            Provenance searchProvenance = new Provenance();
+//            String queryExp = BasicDBObjectBuilder.start("experiments", new BasicDBObject("$in", Collections.singletonList(uri))).get().toString();
+//            ArrayList<Provenance> provenances = provenanceDAO.getProvenances(searchProvenance, queryExp);
+//            for (Provenance provenance : provenances) {
+//                provenancesUris.add(provenance.getUri());
+//            }
+//
+//            // Search provenance by sensors
+//            ExperimentRdf4jDAO experimentDao = new ExperimentRdf4jDAO();
+//            HashMap<String, String> sensors = experimentDao.getSensors(uri);
+//            Set<String> sensorskeySet = sensors.keySet();
+//            if (!sensors.isEmpty()) {
+//                String querySensor = BasicDBObjectBuilder.start("metadata.prov:Agent.prov:id", new BasicDBObject("$in", sensorskeySet)).get().toString();
+//                ArrayList<Provenance> provenancesSensors = provenanceDAO.getProvenances(searchProvenance, querySensor);
+//                for (Provenance provenance : provenancesSensors) {
+//                    if (!provenancesUris.contains(provenance.getUri())) {
+//                        provenancesUris.add(provenance.getUri());
+//                    }
+//                }
+//            }
+//        }
+//
+//        for (String provUri : provenancesUrisAndLabels.keySet()) {
+//            provenancesUris.add(provUri);
+//        }
+//
+//        //3. Get variable label
+//        VariableDAO variableDAO = new VariableDAO();
+//        if (!variableDAO.existAndIsVariable(variableUri)) {
+//            // Request failure
+//            getResponse = new ResultForm<>(0, 0, list, true, 0);
+//            statusList.add(new Status(StatusCodeMsg.DATA_ERROR, StatusCodeMsg.ERR, "Unknown variable URI : " + variableUri));
+//            getResponse.setStatus(statusList);
+//            return Response.status(Response.Status.NOT_FOUND).entity(getResponse).build();
+//        }
+//        String variableLabel = variableDAO.findLabelsForUri(variableUri).get(0);
+//
+//        //4. Get count
+//        Integer totalCount = dataDAO.count(variableUri, startDate, endDate, objectsUris, provenancesUris);
+//
+//        //5. Get data
+//        List<Data> dataList = dataDAO.find(page, pageSize, variableUri, startDate, endDate, objectsUris, provenancesUris);
+//
+//        //6. Return result
+//        if (dataList == null) {
+//            // Request failure
+//            getResponse = new ResultForm<>(0, 0, list, true, 0);
+//            return noResultFound(getResponse, statusList);
+//        } else if (dataList.isEmpty()) {
+//            // No results
+//            getResponse = new ResultForm<>(0, 0, list, true, 0);
+//            return noResultFound(getResponse, statusList);
+//        } else {
+//            // Convert all data object to DTO's
+//            for (Data data : dataList) {
+//                if (data.getObjectUri() != null && !objectsUrisAndLabels.containsKey(data.getObjectUri())) {
+//                    //We need to get the labels of the object
+//                    objectsUrisAndLabels.put(data.getObjectUri(), scientificObjectDAO.findLabelsForUri(data.getObjectUri()));
+//                }
+//
+//                if (!provenancesUrisAndLabels.containsKey(data.getProvenanceUri())) {
+//                    //We need to get the label of the provenance
+//                    provenancesUrisAndLabels.put(data.getProvenanceUri(), provenanceDAO.findLabelByUri(data.getProvenanceUri()));
+//                }
+//
+//                //Get provenance label
+//                String dataProvenanceLabel = provenancesUrisAndLabels.get(data.getProvenanceUri());
+//                //Get object labels
+//                List<String> dataObjectLabels = new ArrayList<>();
+//                if (objectsUrisAndLabels.get(data.getObjectUri()) != null) {
+//                    dataObjectLabels = objectsUrisAndLabels.get(data.getObjectUri());
+//                }
+//
+//                list.add(new DataSearchDTO(data, dataProvenanceLabel, dataObjectLabels, variableLabel));
+//            }
+//
+//            // Return list of DTO
+//            getResponse = new ResultForm<>(pageSize, page, list, true, totalCount);
+//            getResponse.setStatus(statusList);
+//            return Response.status(Response.Status.OK).entity(getResponse).build();
+//        }
+//    }
+
 }
