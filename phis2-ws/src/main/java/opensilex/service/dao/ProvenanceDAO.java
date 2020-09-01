@@ -95,6 +95,10 @@ public class ProvenanceDAO extends MongoDAO<Provenance> {
         if (searchProvenance.getComment() != null) {
             query.append(DB_FIELD_COMMENT, Pattern.compile(searchProvenance.getComment(), Pattern.CASE_INSENSITIVE));
         }
+        
+        if (searchProvenance.getExperiments()!= null && !searchProvenance.getExperiments().isEmpty()) {
+            query.append(DB_FIELD_EXPERIMENTS, searchProvenance.getExperiments());
+        }
         LOGGER.debug(query.toJson());
 
         return query;
@@ -466,6 +470,7 @@ public class ProvenanceDAO extends MongoDAO<Provenance> {
                 provenance.setLabel(provenanceDocument.getString(DB_FIELD_LABEL));
                 provenance.setComment(provenanceDocument.getString(DB_FIELD_COMMENT));
                 provenance.setMetadata(provenanceDocument.get(DB_FIELD_METADATA));
+                provenance.setExperiments(provenanceDocument.getList(DB_FIELD_EXPERIMENTS,String.class));
 
                 // Add the provenance to the list
                 provenances.add(provenance);

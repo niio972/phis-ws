@@ -187,6 +187,8 @@ public final class DocumentationAnnotation {
     public static final String EXAMPLE_PROVENANCE_URI = "http://www.opensilex.org/demo/2018/pv181515071552";
     public static final String EXAMPLE_PROVENANCE_DATE = EXAMPLE_DATE;
     public static final String EXAMPLE_PROVENANCE_LABEL = "PROV2019-LEAF";
+    public static final String EXAMPLE_PROVENANCE_EXPERIMENT_LIST = "[\"" + EXAMPLE_EXPERIMENT_URI + "\"]";
+
     public static final String EXAMPLE_PROVENANCE_COMMENT = "In this provenance we have count the number of leaf per plant";
     public static final String EXAMPLE_PROVENANCE_METADATA = "{ \"SensingDevice\" : \"http://www.opensilex.org/demo/s001\",\n" +
                                                                "\"Vector\" : \"http://www.opensilex.org/demo/v001\"}";

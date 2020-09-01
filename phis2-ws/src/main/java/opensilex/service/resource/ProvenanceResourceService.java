@@ -206,6 +206,7 @@ public class ProvenanceResourceService extends ResourceService {
      * @param uri
      * @param label
      * @param comment
+     * @param experiments
      * @param jsonValueFilter
      * @return list of the provenances corresponding to the search params given
      * @example
@@ -252,6 +253,7 @@ public class ProvenanceResourceService extends ResourceService {
         @ApiParam(value = "Search by provenance uri", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_URI) @QueryParam("uri") @URL String uri,
         @ApiParam(value = "Search by provenance label", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_LABEL) @QueryParam("label") String label,
         @ApiParam(value = "Search by comment", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_COMMENT) @QueryParam("comment") String comment,
+        @ApiParam(value = "Search by experiments", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_EXPERIMENT_LIST) @QueryParam("experiments") List<String> experiments,
         @ApiParam(value = "Search by json filter", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_METADATA) @QueryParam("jsonValueFilter") String jsonValueFilter) {
 
         ProvenanceDAO provenanceDAO = new ProvenanceDAO();
@@ -260,7 +262,8 @@ public class ProvenanceResourceService extends ResourceService {
         searchProvenance.setUri(uri);
         searchProvenance.setLabel(label);
         searchProvenance.setComment(comment);
-        
+        searchProvenance.setExperiments(experiments);
+
         provenanceDAO.user = userSession.getUser();
         provenanceDAO.setPage(page);
         provenanceDAO.setPageSize(pageSize);
@@ -268,25 +271,25 @@ public class ProvenanceResourceService extends ResourceService {
         // 2. Get provenances count
         int totalCount = provenanceDAO.count(searchProvenance, jsonValueFilter);
         
-        // 3. Get environment measures page list
-        ArrayList<Provenance> measures = provenanceDAO.getProvenances(searchProvenance, jsonValueFilter);
+        // 3. Get provenances page list
+        ArrayList<Provenance> provenances = provenanceDAO.getProvenances(searchProvenance, jsonValueFilter);
         
         // 4. Initialize returned provenances
         ArrayList<ProvenanceDTO> list = new ArrayList<>();
         ArrayList<Status> statusList = new ArrayList<>();
         ResultForm<ProvenanceDTO> getResponse;
         
-        if (measures == null) {
+        if (provenances == null) {
             // Request failure
             getResponse = new ResultForm<>(0, 0, list, true, 0);
             return noResultFound(getResponse, statusList);
-        } else if (measures.isEmpty()) {
+        } else if (provenances.isEmpty()) {
             // No results
             getResponse = new ResultForm<>(0, 0, list, true, 0);
             return noResultFound(getResponse, statusList);
         } else {
             // Convert all provenances object to DTO's
-            measures.forEach((provenance) -> {
+            provenances.forEach((provenance) -> {
                 list.add(new ProvenanceDTO(provenance));
             });
             
