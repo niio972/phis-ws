@@ -763,7 +763,12 @@ public class UriGenerator {
         }
 
         UriDAO uriDao = new UriDAO();
-
+        
+        // in order to prevent other tests
+        if (instanceType.equals(Oeso.CONCEPT_DATA.toString())) {
+           return generateDataUri(additionalInformation);
+        }
+         
         if (uriDao.isSubClassOf(instanceType, Oeso.CONCEPT_VECTOR.toString())) {
             return generateVectorUri(year);
         } else if (uriDao.isSubClassOf(instanceType, Oeso.CONCEPT_SENSING_DEVICE.toString())) {
@@ -797,8 +802,7 @@ public class UriGenerator {
             return generateGroupUri(additionalInformation);
         } else if (instanceType.equals(Oeso.CONCEPT_PROVENANCE.toString())) {
             return generateProvenanceUri();
-        } else if (instanceType.equals(Oeso.CONCEPT_DATA.toString())) {
-            return generateDataUri(additionalInformation);
+        
         } else if (uriDao.isSubClassOf(instanceType, Oeev.Event.getURI())) {
             return generateEventUri();
         } else if (instanceType.equals(Time.Instant.toString())) {

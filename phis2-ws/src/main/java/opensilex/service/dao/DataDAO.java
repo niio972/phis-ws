@@ -80,18 +80,26 @@ public class DataDAO extends MongoDAO<Data> {
         VariableDAO variableDAO = new VariableDAO();
         ProvenanceDAO provenanceDAO = new ProvenanceDAO();
 
+        // Check one if a variable and provenance uris exist
+        ArrayList<String> checkVariable = new ArrayList<>();
+        ArrayList<String> checkProvenance = new ArrayList<>();
+ 
         for (Data data : dataList) {
             // 1. Check if the variableUri exist and is a variable
-            if (!variableDAO.existAndIsVariable(data.getVariableUri())) {
+            if (!checkVariable.contains(data.getVariableUri()) && !variableDAO.existAndIsVariable(data.getVariableUri())) {
                 dataOk = false;
                 checkStatus.add(new Status(StatusCodeMsg.WRONG_VALUE, StatusCodeMsg.ERR,
                         "Unknown variable : " + data.getVariableUri()));
-            } 
+            }else{
+                checkVariable.add(data.getVariableUri());
+            }
             // 2. Check if the provenance uri exist and is a provenance
-            if (!provenanceDAO.existProvenanceUri(data.getProvenanceUri())) {
+            if (!checkProvenance.contains(data.getProvenanceUri()) && !provenanceDAO.existProvenanceUri(data.getProvenanceUri())) {
                 dataOk = false;
                 checkStatus.add(new Status(StatusCodeMsg.WRONG_VALUE, StatusCodeMsg.ERR, 
                     "Unknown provenance : " + data.getProvenanceUri()));
+            }else{
+                checkProvenance.add(data.getProvenanceUri());
             }
         }
 
