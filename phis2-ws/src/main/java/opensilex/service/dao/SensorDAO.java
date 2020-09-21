@@ -1083,7 +1083,7 @@ public class SensorDAO extends Rdf4jDAO<Sensor> {
      * @param sensor The sensor URI which measures veriables
      * @return HashMap of URI => label
      */
-    private HashMap<String, String> getVariables(String sensorUri) {
+    public HashMap<String, String> getVariables(String sensorUri) {
         SPARQLQueryBuilder query = prepareSearchVariablesQuery(sensorUri);
         
         TupleQuery tupleQuery = getConnection().prepareTupleQuery(QueryLanguage.SPARQL, query.toString());

@@ -435,10 +435,10 @@ public class EventDAO extends Rdf4jDAO<Event> {
         Resource eventResource = ResourceFactory.createResource(event.getUri());
         Node eventType = NodeFactory.createURI(event.getType());
         updateBuilder.addInsert(graph, eventResource, RDF.type, eventType);
-        
+
         // Add creator to objects
         Node creator =  NodeFactory.createURI(user.getUri());
-        updateBuilder.addInsert(graph, event, DCTerms.creator, creator);
+        updateBuilder.addInsert(graph, eventResource, DCTerms.creator, creator);
         
         addInsertInstantToUpdateBuilder(
                 updateBuilder,
@@ -457,7 +457,7 @@ public class EventDAO extends Rdf4jDAO<Event> {
                 event.getProperties(),
                 Contexts.EVENTS.toString(),
                 false);
-    }
+}
 
     /**
      * Inserts the given events in the storage.
