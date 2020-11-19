@@ -16,6 +16,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +51,7 @@ import opensilex.service.dao.ExperimentRdf4jDAO;
 import opensilex.service.dao.ExperimentSQLDAO;
 import opensilex.service.dao.ProvenanceDAO;
 import opensilex.service.dao.ScientificObjectRdf4jDAO;
+import opensilex.service.dao.SensorDAO;
 import opensilex.service.dao.VariableDAO;
 import opensilex.service.documentation.DocumentationAnnotation;
 import opensilex.service.documentation.StatusCodeMsg;
@@ -66,6 +68,8 @@ import opensilex.service.view.brapi.form.ResponseFormGET;
 import opensilex.service.view.brapi.form.ResponseFormPOST;
 import opensilex.service.result.ResultForm;
 import opensilex.service.model.Experiment;
+import opensilex.service.model.ScientificObject;
+import opensilex.service.model.Variable;
 import opensilex.service.ontology.Oeso;
 import opensilex.service.resource.dto.data.DataDTO;
 import opensilex.service.resource.dto.data.DataSearchDTO;
@@ -603,7 +607,7 @@ public class ExperimentResourceService extends ResourceService {
         for (String uri : objectsUrisAndLabels.keySet()) {
             objectsUris.add(uri);
         }
-
+        boolean wrongProv = false;
         //2. Get list of provenances uris corresponding to the label given if needed.
         ProvenanceDAO provenanceDAO = new ProvenanceDAO();
         if (provenanceUri != null && !provenanceUri.isEmpty()) {
@@ -612,29 +616,44 @@ public class ExperimentResourceService extends ResourceService {
                 if (findById.getExperiments().contains(experimentUri)) {
                     //If the provenance URI is given, we need the provenance label
                     provenancesUris.add(provenanceUri);
+                }else{
+                    wrongProv =true;
                 }
             } catch (Exception ex) {
-LOGGER.error(ex.getMessage(),ex);           
+                wrongProv =true;
+                LOGGER.error(ex.getMessage(),ex);           
             }
 
         } else if (provenanceLabel != null && !provenanceLabel.isEmpty()) {
             //If the provenance URI is empty and a label is given, we search the provenance(s) with the given label (like)
             provenancesUrisAndLabels = provenanceDAO.findUriAndLabelsByLabel(provenanceLabel);
-        }
-
-        for (String uri : provenancesUrisAndLabels.keySet()) {
-              Provenance findById;
-            try {
-                findById = provenanceDAO.findById(uri);
-                  if (findById.getExperiments().contains(experimentUri)) {
-                    //If the provenance URI is given, we need the provenance label
-                    provenancesUris.add(uri);
+            for (String uri : provenancesUrisAndLabels.keySet()) {
+                Provenance findById;
+                try {
+                    findById = provenanceDAO.findById(uri);
+                    if (findById.getExperiments().contains(experimentUri)) {
+                        //If the provenance URI is given, we need the provenance label
+                        provenancesUris.add(uri);
+                    }
+                } catch (Exception ex) {
+                    LOGGER.error(ex.getMessage(), ex);
                 }
-            } catch (Exception ex) {
-                LOGGER.error(ex.getMessage(),ex);
             }
-              
-            
+        }else{
+            Provenance prov = new Provenance();
+            List<String> exps = new ArrayList<>();
+            exps.add(experimentUri);
+            prov.setExperiments(exps);
+            provenanceDAO.setPage(0);
+            provenanceDAO.setPageSize(5000);
+
+            ArrayList<Provenance> provenances = provenanceDAO.getProvenances(prov,null);
+            for (Provenance provenance : provenances) {
+                provenancesUris.add(provenance.getUri());
+            }
+            if(provenancesUris.isEmpty()){
+                  wrongProv =true;
+            }
         }
 
         //3. Get variable label
@@ -647,13 +666,16 @@ LOGGER.error(ex.getMessage(),ex);
             return Response.status(Response.Status.NOT_FOUND).entity(getResponse).build();
         }
         String variableLabel = variableDAO.findLabelsForUri(variableUri).get(0);
+        
+        List<Data> dataList = null;
+        Integer totalCount = 0;
+        if(!wrongProv){
+            //4. Get count
+            totalCount = dataDAO.count(variableUri, startDate, endDate, objectsUris, provenancesUris);
 
-        //4. Get count
-        Integer totalCount = dataDAO.count(variableUri, startDate, endDate, objectsUris, provenancesUris);
-
-        //5. Get data
-        List<Data> dataList = dataDAO.find(page, pageSize, variableUri, startDate, endDate, objectsUris, provenancesUris);
-
+            //5. Get data
+            dataList = dataDAO.find(page, pageSize, variableUri, startDate, endDate, objectsUris, provenancesUris);
+        } 
         //6. Return result
         if (dataList == null) {
             // Request failure
@@ -693,6 +715,158 @@ LOGGER.error(ex.getMessage(),ex);
             return Response.status(Response.Status.OK).entity(getResponse).build();
         }
     }
+    
+    // /**
+    //  * Experiment Data GET service.
+    //  *
+    //  * @param experimentUri
+    //  * @param pageSize
+    //  * @param page
+    //  * @param provenanceUri
+    //  * @param startDate
+    //  * @param endDate
+    //  * @param uri
+    //  * @return list of the data corresponding to the search params given
+    //  * @example { "metadata": { "pagination": { "pageSize": 20, "currentPage":
+    //  * 0, "totalCount": 3, "totalPages": 1 }, "status": [], "datafiles": [] },
+    //  * "result": { "data": [ { "uri":
+    //  * "http://www.phenome-fppn.fr/diaphen/id/data/d2plf65my4rc2odiv2lbjgukc2zswkqyoddh25jtoy4b5pf3le3q4ec5c332f5cd44ce82977e404cebf83c",
+    //  * "provenanceUri": "http://www.phenome-fppn.fr/mtp/2018/pv181515071552",
+    //  * "objectUri": "http://www.phenome-fppn.fr/diaphen/2018/o18001199",
+    //  * "variableUri": "http://www.phenome-fppn.fr/diaphen/id/variables/v009",
+    //  * "date": "2017-06-15T00:00:00+0200", "value": 2.4 }, { "uri":
+    //  * "http://www.phenome-fppn.fr/diaphen/id/data/pttdrrqybxoyku4img323dyrhmpp267mhnpiw3vld2wm6tap3vwq93b344c429ec45bb9b185edfe5bc2b64",
+    //  * "provenanceUri": "http://www.phenome-fppn.fr/mtp/2018/pv181515071552",
+    //  * "objectUri": "http://www.phenome-fppn.fr/diaphen/2018/o18001199",
+    //  * "variableUri": "http://www.phenome-fppn.fr/diaphen/id/variables/v009",
+    //  * "date": "2017-06-16T00:00:00+0200", "value": "2017-06-15T00:00:00+0200" }
+    //  * ] } }
+    //  */
+    // @GET
+    // @Path("{uri}/allData")
+    // @ApiOperation(value = "Get data corresponding to the search parameters given.",
+    //         notes = "Retrieve all data corresponding to the search parameters given,"
+    //         + "<br/>Date parameters could be either a datetime like: " + DocumentationAnnotation.EXAMPLE_XSDDATETIME
+    //         + "<br/>or simply a date like: " + DocumentationAnnotation.EXAMPLE_DATE)
+    // @ApiResponses(value = {
+    //     @ApiResponse(code = 200, message = "Retrieve all data", response = Data.class, responseContainer = "List"),
+    //     @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
+    //     @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+    //     @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
+    // })
+    // @ApiImplicitParams({
+    //     @ApiImplicitParam(name = GlobalWebserviceValues.AUTHORIZATION, required = true,
+    //             dataType = GlobalWebserviceValues.DATA_TYPE_STRING, paramType = GlobalWebserviceValues.HEADER,
+    //             value = DocumentationAnnotation.ACCES_TOKEN,
+    //             example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+    // })
+    // @Produces(MediaType.APPLICATION_JSON)
+    // public Response getExperimentData(
+    //         @PathParam("uri")
+    //         @Required
+    //         @URL String experimentUri    ) {
+    //     ArrayList<DataSearchDTO> list = new ArrayList<>();
+    //     ArrayList<Status> statusList = new ArrayList<>();
+    //     ResultForm<DataSearchDTO> getResponse;
+
+    //     DataDAO dataDAO = new DataDAO();
+
+    //     List<String> objectsUris = new ArrayList<>();
+    //     List<String> provenancesUris = new ArrayList<>();
+
+    //     Map<String, List<String>> objectsUrisAndLabels = new HashMap<>();
+    //     Map<String, String> provenancesUrisAndLabels = new HashMap<>();
+ 
+    //     //2. Get list of provenances uris corresponding to the label given if needed.
+    //     ProvenanceDAO provenanceDAO = new ProvenanceDAO();
+    //     ArrayList<Provenance> provenances = provenanceDAO.getProvenances(new Provenance(), null);
+
+    //     //3. Get list of sensors
+
+    //     ExperimentRdf4jDAO experimentRdf4jDAO = new ExperimentRdf4jDAO();
+    //     HashMap<String, String> sensors = experimentRdf4jDAO.getSensors(experimentUri);
+        
+    //     for (Provenance prov : provenances ) {
+    //         if (prov.getExperiments().contains(experimentUri)) {
+    //             //If the provenance URI is given, we need the provenance label
+    //             provenancesUris.add(prov.getUri());
+    //             provenancesUrisAndLabels.put(prov.getUri(), prov.getLabel());
+    //         }
+    //         Map<String,Object> metadata = (Map<String,Object>)  prov.getMetadata();
+    //         if(metadata.get("prov:Agent") != null){
+    //             System.out.println("opensilex.service.resource.ExperimentResourceService.getExperimentData()");
+    //             System.out.println(metadata.toString());
+
+    //             List<Map<String,String>> agents = (List<Map<String,String>>) metadata.get("prov:Agent");
+    //             for (Map<String, String> agent : agents) {
+    //                 if(agent.containsKey("rdf:type") && agent.get("rdf:type").equals("oeso:SensingDevice")){
+    //                     if(sensors.containsKey(agent.get("prov:id"))){
+    //                         provenancesUris.add(agent.get("prov:id"));
+    //                         provenancesUrisAndLabels.put(prov.getUri(), prov.getLabel());
+    //                     }
+    //                 }
+    //             }
+    //         } 
+    //     }
+        
+    //     //4. Get variable label
+    //     Map<String, String> variablesUrisAndLabels = experimentRdf4jDAO.getVariables(experimentUri);
+    //     List<String> keySet =  new ArrayList<>(variablesUrisAndLabels.keySet()); 
+    //     List<Data> dataList = new ArrayList<>();
+    //     Integer totalCount = 0;
+        
+    //     for (String variableUri : keySet) {
+    //         totalCount = dataDAO.count( variableUri, null, null, objectsUris, provenancesUris);
+    //         if(totalCount >0){
+    //              dataList.addAll(dataDAO.find(0, 4000000, variableUri, null, null, null, provenancesUris)) ;
+    //         }
+    //     }
+      
+    //     System.out.println("opensilex.service.resource.ExperimentResourceService.getExperimentData()");
+    //     System.out.println(dataList.size());
+      
+
+    //     //6. Return result
+    //     if (dataList == null) {
+    //         // Request failure
+    //         getResponse = new ResultForm<>(0, 0, list, true, 0);
+    //         return noResultFound(getResponse, statusList);
+    //     } else if (dataList.isEmpty()) {
+    //         // No results
+    //         getResponse = new ResultForm<>(0, 0, list, true, 0);
+    //         return noResultFound(getResponse, statusList);
+    //     } else {
+    //         ScientificObjectRdf4jDAO scientificObjectDAO = new ScientificObjectRdf4jDAO();
+
+    //         // Convert all data object to DTO's
+    //         for (Data data : dataList) {
+    //             if (data.getObjectUri() != null && !objectsUrisAndLabels.containsKey(data.getObjectUri())) {
+    //                 //We need to get the labels of the object
+    //                 objectsUrisAndLabels.put(data.getObjectUri(), scientificObjectDAO.findLabelsForUri(data.getObjectUri()));
+    //             }
+
+    //             if (!provenancesUrisAndLabels.containsKey(data.getProvenanceUri())) {
+    //                 //We need to get the label of the provenance
+    //                 provenancesUrisAndLabels.put(data.getProvenanceUri(), provenanceDAO.findLabelByUri(data.getProvenanceUri()));
+    //             }
+                 
+    //             //Get provenance label
+    //             String dataProvenanceLabel = provenancesUrisAndLabels.get(data.getProvenanceUri());
+    //             //Get object labels
+    //             List<String> dataObjectLabels = new ArrayList<>();
+    //             if (objectsUrisAndLabels.get(data.getObjectUri()) != null) {
+    //                 dataObjectLabels = objectsUrisAndLabels.get(data.getObjectUri());
+    //             }
+
+    //             list.add(new DataSearchDTO(data, dataProvenanceLabel, dataObjectLabels, variablesUrisAndLabels.get(data.getVariableUri())));
+    //         }
+
+    //         // Return list of DTO
+    //         getResponse = new ResultForm<>(0, 0, list, true, totalCount);
+    //         getResponse.setStatus(statusList);
+    //         return Response.status(Response.Status.OK).entity(getResponse).build();
+    //     }
+    // }
 
 //    //List provenances
 //    // search provenance by experiments
