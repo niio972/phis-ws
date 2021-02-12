@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.mycompany</groupId>
@@ -18,7 +19,7 @@
         <!--REPO CRYPTAGE-->
         <repository>
             <id>spring-milestones</id>
-            <url>https://repo.spring.io/libs-milestone/</url>
+            <url>https://repo.spring.io/milestone/</url>
         </repository>
     </repositories>
 
@@ -52,12 +53,11 @@
             </properties>
         </profile>
     </profiles>
-    
     <dependencies>
-        <dependency> 
-            <groupId>net.logstash.logback</groupId> 
-            <artifactId>logstash-logback-encoder</artifactId> 
-            <version>6.3</version> 
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>6.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat</groupId>
@@ -106,10 +106,15 @@
             <type>jar</type>
         </dependency>
         <dependency>
-            <groupId>com.twmacinta</groupId>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.9.12</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.joyent.util/fast-md5 -->
+        <dependency>
+            <groupId>com.joyent.util</groupId>
             <artifactId>fast-md5</artifactId>
             <version>2.7.1</version>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>javax</groupId>
@@ -270,26 +275,26 @@
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
             <version>2.3.1</version>
-        </dependency>        
+        </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-querybuilder</artifactId>
             <version>3.9.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
-		<dependency>
-		    <groupId>org.junit.jupiter</groupId>
-		    <artifactId>junit-jupiter-api</artifactId>
-		    <version>5.5.2</version>
-		    <scope>test</scope>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine -->
-		<dependency>
-		    <groupId>org.junit.jupiter</groupId>
-		    <artifactId>junit-jupiter-engine</artifactId>
-		    <version>5.5.2</version>
-		    <scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.5.2</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.5.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -301,14 +306,14 @@
             <resource>
                 <filtering>true</filtering>
                 <directory>src/main/resources</directory>
-            </resource>              
+            </resource>
             <resource>
                 <filtering>true</filtering>
                 <directory>src/main/profiles</directory>
                 <includes>
                     <include>**/*.properties</include>
                 </includes>
-            </resource>       
+            </resource>
         </resources>
         <plugins>
             <!--Code coverage
@@ -359,8 +364,8 @@
                                 <include>**/*.js</include>
                             </includes>
                         </resource>
-                    </webResources>  
-                </configuration> 
+                    </webResources>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
