@@ -230,7 +230,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
             
             //Check if the uri of the isPartOf object exists
             if (scientificObject.getIsPartOf() != null) {
-                if (!isPartOfCache.contains(scientificObject.getIsPartOf()) && existUri(scientificObject.getIsPartOf())) {
+                if (isPartOfCache.contains(scientificObject.getIsPartOf()) || existUri(scientificObject.getIsPartOf())) {
                     //1. Get isPartOf object type
                     uriDao.uri = scientificObject.getIsPartOf();
                     ArrayList<Uri> typesResult = uriDao.getAskTypeAnswer();
