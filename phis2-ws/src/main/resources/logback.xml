@@ -5,18 +5,18 @@
     <appender name="STASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${logDirectory}/sunagriAPI.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-             <fileNamePattern>${logDirectory}/sunagriAPI.%d{yyyy-MM-dd}.log</fileNamePattern>
-             <maxHistory>3</maxHistory>
+            <fileNamePattern>${logDirectory}/sunagriAPI.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>3</maxHistory>
         </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
-    
-     <appender name="STDOUT_DEBUG" class="ch.qos.logback.core.ConsoleAppender">
+
+    <appender name="STDOUT_DEBUG" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%-5relative %-5level %logger{35} - %msg%n</pattern>
         </encoder>
     </appender>
-    
+
     <!-- define log level output for specific packages -->
     <logger name="opensilex.service" level="DEBUG" />
     <logger name="org.apache" level="ERROR" />
@@ -29,6 +29,6 @@
     <!-- appender by log type -->
     <root level="DEBUG">
         <appender-ref ref="STASH" />
-        <appender-ref ref="STDOUT_DEBUG" /> 
+        <!-- <appender-ref ref="STDOUT_DEBUG" />  -->
     </root>
 </configuration>
