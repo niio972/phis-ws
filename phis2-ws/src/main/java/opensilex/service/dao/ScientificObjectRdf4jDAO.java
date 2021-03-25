@@ -82,6 +82,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
     
     //The following attributes are used to search scientific objects in the triplestore
     private final String EXPERIMENT = "experiment";
+    private final String IS_PART_OF = "isPartOf";
     private final String ALIAS = "alias";
     private final String PROPERTY = "property";
     private final String PROPERTY_RELATION = "propertyRelation";
@@ -647,6 +648,9 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                         if (bindingSet.getValue(ALIAS) != null) {
                             scientificObject.setLabel(bindingSet.getValue(ALIAS).stringValue());
                         }
+                        if (bindingSet.getValue(IS_PART_OF) != null) {
+                            scientificObject.setIsPartOf(bindingSet.getValue(IS_PART_OF).stringValue());
+                        }
                         if (rdfType != null) {
                             scientificObject.setRdfType(rdfType);
                         } else {
@@ -756,7 +760,9 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
             sparqlQuery.appendOptional("?" + URI + " <" + Oeso.RELATION_PARTICIPATES_IN.toString() + "> " + "?" + EXPERIMENT + " . ");
         }
         
-        
+        sparqlQuery.appendSelect("?" + IS_PART_OF);
+        sparqlQuery.appendOptional("?" + URI + " <" + Oeso.RELATION_IS_PART_OF.toString() + "> " + "?" + IS_PART_OF + " . ");
+         
         if (page != null && pageSize != null) {
             sparqlQuery.appendLimit(pageSize);
             sparqlQuery.appendOffset(page * pageSize);
@@ -977,6 +983,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                 updateResult.statusList.add(new Status(StatusCodeMsg.RESOURCES_UPDATED, StatusCodeMsg.INFO, updatedScientificObjectsUris.size() + " updated resource(s)."));
                 updateResult.createdResources = updatedScientificObjectsUris; 
             } catch (Exception ex) {
+                LOGGER.error(ex.getMessage(),ex);
                 updateResult = new POSTResultsReturn(Boolean.FALSE, Boolean.FALSE, Boolean.FALSE);
                 String errorMessage = "";
                 for (StackTraceElement stackTraceElement : ex.getStackTrace()) {
@@ -1144,7 +1151,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
         //2.1. Triplestore data
         //2.1.1 Delete old data if the scientific object is in the context
         UpdateRequest deleteQuery = null;
-        if (existUriInGraph(scientificObject.getUri(), context)) {
+        if (oldScientificObject != null && existUriInGraph(scientificObject.getUri(), context)) {
             deleteQuery = prepareDeleteOneInContextQuery(oldScientificObject, context);
         }
         
