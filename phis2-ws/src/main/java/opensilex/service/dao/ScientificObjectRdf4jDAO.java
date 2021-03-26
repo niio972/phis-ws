@@ -1046,7 +1046,9 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                     Node propertyValue = NodeFactory.createURI(property.getValue());
                     Node propertyRdfType = NodeFactory.createURI(property.getRdfType());
                     updateBuilder.addDelete(graph, scientificObjectUri, propertyRelation, propertyValue);
-                    updateBuilder.addDelete(graph, propertyValue, RDF.type, propertyRdfType);
+                    if(!property.getRelation().equals(Oeso.RELATION_IS_PART_OF.toString())){
+                        updateBuilder.addDelete(graph, propertyValue, RDF.type, propertyRdfType);
+                    }
                 } else  {
                     boolean propertyIsUrl = true;
                     try { 
